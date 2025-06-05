@@ -1,0 +1,13 @@
+fastapi>=0.68.0,<0.69.0
+uvicorn>=0.15.0,<0.16.0
+pydantic>=1.8.0,<2.0.0
+langchain>=0.0.300
+haystack-ai>=1.0.0
+transformers>=4.30.0
+torch>=2.0.0
+milvus-sdk>=2.2.0
+temporal-py>=1.0.0
+python-dotenv>=0.19.0
+prometheus-client>=0.15.0
+fastapi-prometheus>=0.1.0
+loguru>=0.6.0
