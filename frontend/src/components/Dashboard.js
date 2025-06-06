@@ -38,7 +38,39 @@ const MetricCard = ({ title, value, description, progress }) => (
   </Paper>
 );
 
-const RecentActivity = () => (
+const RecentActivity = () => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await axios.get('/api/activities');
+        setActivities(response.data);
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+    const interval = setInterval(fetchActivities, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <Paper elevation={0} sx={{ p: 3, height: '100%', bgcolor: 'background.paper', borderRadius: 2 }}>
+        <Typography variant="h6" color="primary" gutterBottom>Recent Activity</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      </Paper>
+    );
+  }
+
+  return (
   <Paper
     elevation={0}
     sx={{
@@ -52,13 +84,27 @@ const RecentActivity = () => (
       Recent Activity
     </Typography>
     <List>
-      {/* This would be populated with real data from your backend */}
-      {[1, 2, 3].map((item) => (
+      {activities.map((activity) => (
         <React.Fragment key={item}>
-          <ListItem>
+          <ListItem sx={{
+            '&:hover': {
+              bgcolor: 'action.hover',
+              borderRadius: 1
+            }
+          }}>
             <ListItemText
-              primary={`Query #${item}`}
-              secondary={`Sample interaction ${item}`}
+              primary={activity.type}
+              secondary={
+                <React.Fragment>
+                  <Typography component="span" variant="body2" color="text.primary">
+                    {activity.description}
+                  </Typography>
+                  <br />
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    {new Date(activity.timestamp).toLocaleString()}
+                  </Typography>
+                </React.Fragment>
+              }
             />
           </ListItem>
           <Divider />

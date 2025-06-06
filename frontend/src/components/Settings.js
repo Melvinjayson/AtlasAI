@@ -15,6 +15,7 @@ import {
 import axios from 'axios';
 
 const Settings = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState({
     modelTemperature: 0.7,
     maxTokens: 2000,
@@ -38,7 +39,47 @@ const Settings = () => {
     setSettings({ ...settings, [name]: newValue });
   };
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get('/api/settings');
+        setSettings(response.data);
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: 'Error loading settings',
+          severity: 'error',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const validateSettings = () => {
+    if (settings.maxTokens < 100 || settings.maxTokens > 4000) {
+      return 'Max tokens must be between 100 and 4000';
+    }
+    if (settings.modelTemperature < 0 || settings.modelTemperature > 1) {
+      return 'Temperature must be between 0 and 1';
+    }
+    if (!settings.apiEndpoint.startsWith('http')) {
+      return 'API endpoint must be a valid URL';
+    }
+    return null;
+  };
+
   const handleSave = async () => {
+    const error = validateSettings();
+    if (error) {
+      setSnackbar({
+        open: true,
+        message: error,
+        severity: 'error',
+      });
+      return;
+    }
     try {
       await axios.post('/api/settings', settings);
       setSnackbar({
@@ -64,9 +105,14 @@ const Settings = () => {
       <Typography variant="h4" gutterBottom>
         Settings
       </Typography>
-      <Paper
-        elevation={0}
-        sx={{
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Paper
+          elevation={0}
+          sx={{
           p: 3,
           bgcolor: 'background.paper',
           borderRadius: 2,
@@ -161,6 +207,7 @@ const Settings = () => {
           </Grid>
         </Grid>
       </Paper>
+      )}
 
       <Snackbar
         open={snackbar.open}

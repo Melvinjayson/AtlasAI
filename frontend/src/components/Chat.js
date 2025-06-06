@@ -12,9 +12,13 @@ import { Send as SendIcon } from '@mui/icons-material';
 import axios from 'axios';
 
 const Chat = () => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chatMessages');
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -23,7 +27,16 @@ const Chat = () => {
 
   useEffect(() => {
     scrollToBottom();
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
   }, [messages]);
+
+  useEffect(() => {
+    const handleConnectionError = () => {
+      setError('Network connection lost. Please check your internet connection.');
+    };
+    window.addEventListener('offline', handleConnectionError);
+    return () => window.removeEventListener('offline', handleConnectionError);
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -34,7 +47,13 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('/api/chat', { message: input });
+      setError(null);
+      const response = await axios.post('/api/chat', { message: input }, {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       const aiMessage = { type: 'ai', content: response.data.response };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {

@@ -25,6 +25,7 @@ import {
 const drawerWidth = 240;
 
 const Layout = ({ children }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,6 +75,14 @@ const Layout = ({ children }) => {
     </div>
   );
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <AppBar
@@ -82,6 +91,9 @@ const Layout = ({ children }) => {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
           bgcolor: 'background.paper',
+          boxShadow: isScrolled ? 1 : 0,
+          backdropFilter: 'blur(8px)',
+          transition: 'all 0.3s ease-in-out',
         }}
       >
         <Toolbar>
@@ -98,6 +110,16 @@ const Layout = ({ children }) => {
       </AppBar>
       <Box
         component="nav"
+        sx={{
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            borderRight: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            transition: 'all 0.3s ease-in-out',
+          },
+        }}
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
         <Drawer
