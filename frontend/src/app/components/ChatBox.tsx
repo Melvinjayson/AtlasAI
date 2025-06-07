@@ -16,6 +16,11 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import PersonIcon from "@mui/icons-material/Person";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 interface Message {
   text: string;
@@ -42,7 +47,7 @@ export default function ChatBox() {
     // Simulate AI response
     setTimeout(() => {
       const aiResponse: Message = {
-        text: "I'm Atlas AI, your intelligent assistant. How can I help you today?",
+        text: "I'm Atlas AI, your intelligent assistant. How can I help you today?\n```python\nprint('Hello from Atlas!')\n```",
         sender: "ai",
         timestamp: new Date(),
       };
@@ -100,7 +105,31 @@ export default function ChatBox() {
                     display: "inline-block",
                   }}
                 >
-                  {message.text}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                    components={{
+                      code({ node, inline, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return !inline && match ? (
+                          <SyntaxHighlighter
+                            style={atomDark}
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code className={className} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
                 </Paper>
               }
               sx={{
@@ -125,8 +154,7 @@ export default function ChatBox() {
         <IconButton
           color="primary"
           onClick={handleSend}
-          disabled={!input.trim()}
-          sx={{ bgcolor: "background.default" }}
+          sx={{ bgcolor: "primary.main", color: "common.white", "&:hover": { bgcolor: "primary.dark" } }}
         >
           <SendIcon />
         </IconButton>
