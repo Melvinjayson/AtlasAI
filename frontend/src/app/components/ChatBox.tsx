@@ -32,14 +32,14 @@ interface Message {
   text: string;
   sender: "user" | "ai";
   timestamp: Date;
-  parentId?: string;
+  parentId?: string | undefined;
   replies?: Message[];
 }
 
 export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<string | undefined>(undefined);
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +81,7 @@ export default function ChatBox() {
         findAndAddReply(updatedMessages);
         return updatedMessages;
       });
-      setReplyTo(null);
+      setReplyTo(undefined);
     } else {
       setMessages(prev => [...prev, newMessage]);
     }
@@ -169,19 +169,18 @@ export default function ChatBox() {
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
-                code({ node, inline, className, children, ...props }) {
+                code: ({ className, children }) => {
                   const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
+                  return match ? (
                     <SyntaxHighlighter
                       style={atomDark}
                       language={match[1]}
                       PreTag="div"
-                      {...props}
                     >
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
                   ) : (
-                    <code className={className} {...props}>
+                    <code className={className}>
                       {children}
                     </code>
                   );
@@ -246,7 +245,7 @@ export default function ChatBox() {
         {replyTo && (
           <Button
             size="small"
-            onClick={() => setReplyTo(null)}
+            onClick={() => setReplyTo(undefined)}
             sx={{ alignSelf: "center" }}
           >
             Cancel Reply
